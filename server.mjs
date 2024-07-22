@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 import http from "http";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { nanoid } from "nanoid";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,10 +12,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(join(__dirname, "build")));
+const games = {};
+
+app.use(express.static(join(__dirname, "../frontend/build")));
 
 app.get("*", (req, res) => {
-  res.sendFile(join(__dirname, "build", "index.html"));
+  res.sendFile(join(__dirname, "../frontend/build", "index.html"));
 });
 
 io.on("connection", (socket) => {
