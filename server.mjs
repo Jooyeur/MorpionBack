@@ -1,7 +1,6 @@
 import express from "express";
 import { Server } from "socket.io";
 import http from "http";
-import { nanoid } from "nanoid";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
@@ -12,12 +11,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const games = {};
-
-// Servir les fichiers statiques du répertoire "build"
 app.use(express.static(join(__dirname, "build")));
 
-// Gestion des routes pour les fichiers statiques
 app.get("*", (req, res) => {
   res.sendFile(join(__dirname, "build", "index.html"));
 });
