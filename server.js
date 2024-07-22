@@ -1,10 +1,10 @@
 import express from "express";
 import { Server } from "socket.io";
-import { createServer } from "http";
+import http from "http";
 import { nanoid } from "nanoid";
 
 const app = express();
-const server = createServer(app);
+const server = http.createServer(app);
 const io = new Server(server);
 
 const games = {};
@@ -20,19 +20,16 @@ io.on("connection", (socket) => {
       xIsNext: true,
       currentPlayer: socket.id,
     };
+    socket.join(gameId);
     socket.emit("gameCreated", { gameId });
   });
 
   socket.on("joinGame", ({ gameId }) => {
     if (games[gameId] && games[gameId].players.length === 1) {
       games[gameId].players.push(socket.id);
+      socket.join(gameId);
       socket.emit("gameJoined", { gameId, playerId: socket.id });
-      io.to(games[gameId].players[0]).emit("gameUpdate", {
-        squares: games[gameId].squares,
-        xIsNext: games[gameId].xIsNext,
-        currentPlayer: games[gameId].currentPlayer,
-      });
-      io.to(socket.id).emit("gameUpdate", {
+      io.to(gameId).emit("gameUpdate", {
         squares: games[gameId].squares,
         xIsNext: games[gameId].xIsNext,
         currentPlayer: games[gameId].currentPlayer,
@@ -54,19 +51,13 @@ io.on("connection", (socket) => {
         (player) => player !== socket.id
       );
       const winner = calculateWinner(games[gameId].squares);
-      io.to(games[gameId].players[0]).emit("gameUpdate", {
-        squares: games[gameId].squares,
-        xIsNext: games[gameId].xIsNext,
-        currentPlayer: games[gameId].currentPlayer,
-      });
-      io.to(games[gameId].players[1]).emit("gameUpdate", {
+      io.to(gameId).emit("gameUpdate", {
         squares: games[gameId].squares,
         xIsNext: games[gameId].xIsNext,
         currentPlayer: games[gameId].currentPlayer,
       });
       if (winner) {
-        io.to(games[gameId].players[0]).emit("statusUpdate", winner);
-        io.to(games[gameId].players[1]).emit("statusUpdate", winner);
+        io.to(gameId).emit("statusUpdate", winner);
       }
     }
   });
@@ -93,4 +84,4 @@ function calculateWinner(squares) {
 }
 
 const port = process.env.PORT || 4000;
-server.listen(port, () => console.log(`Listening on port ${port}`));
+server.listen(port, () => console.log(`Server running on port ${port}`));
